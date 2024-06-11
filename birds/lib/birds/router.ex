@@ -5,14 +5,15 @@ defmodule Birds.Router do
   plug(:dispatch)
 
   get "/status" do
-    body = Birds.Bird.get_state()
+    state = Birds.Bird.get_state(Birds.Bird)
 
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, Jason.encode!(body))
+    |> send_resp(200, Jason.encode!(state))
   end
 
   post "/kill" do
+    Birds.Bird.kill(Birds.Bird)
     System.halt(0)
   end
 

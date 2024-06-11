@@ -5,15 +5,13 @@ defmodule Birds.Application do
 
   use Application
 
+  @port Application.compile_env(:birds, :port)
+
   @impl true
   def start(_type, _args) do
-    port = String.to_integer(System.get_env("PORT") || "4001")
-
     children = [
-      # Starts a worker by calling: Birds.Worker.start_link(arg)
-      # {Birds.Worker, arg}
-      {Bandit, plug: Birds.Router, scheme: :http, port: port},
-      Birds.Bird
+      {Bandit, plug: Birds.Router, scheme: :http, port: @port},
+      {Birds.Bird, db: Birds.DB.BirdTracker, port: @port, name: Birds.Bird}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
