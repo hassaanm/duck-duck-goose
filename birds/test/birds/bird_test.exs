@@ -19,19 +19,24 @@ defmodule Birds.BirdTest do
   end
 
   test "first duck to join becomes the goose" do
-    Birds.Bird.start_link(db: TestDB, port: 1234, name: :goose)
-    goose_status = Birds.Bird.get_state(:goose)
+    port = 1234
+    Birds.Bird.start_link(db: TestDB, port: port)
+    goose_status = Birds.Bird.get_state(port)
     assert Map.get(goose_status, :type) == :goose
   end
 
   test "ducks that join after there is a goose remain ducks" do
-    Birds.Bird.start_link(db: TestDB, port: 1234, name: :goose)
-    Birds.Bird.start_link(db: TestDB, port: 1235, name: :duck_1)
-    Birds.Bird.start_link(db: TestDB, port: 1236, name: :duck_2)
+    goose_port = 1234
+    duck_1_port = 1235
+    duck_2_port = 1236
 
-    goose_status = Birds.Bird.get_state(:goose)
-    duck_1_status = Birds.Bird.get_state(:duck_1)
-    duck_2_status = Birds.Bird.get_state(:duck_2)
+    Birds.Bird.start_link(db: TestDB, port: goose_port)
+    Birds.Bird.start_link(db: TestDB, port: duck_1_port)
+    Birds.Bird.start_link(db: TestDB, port: duck_2_port)
+
+    goose_status = Birds.Bird.get_state(goose_port)
+    duck_1_status = Birds.Bird.get_state(duck_1_port)
+    duck_2_status = Birds.Bird.get_state(duck_2_port)
 
     assert Map.get(goose_status, :type) == :goose
     assert Map.get(duck_1_status, :type) == :duck

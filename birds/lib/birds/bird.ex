@@ -4,7 +4,11 @@ defmodule Birds.Bird do
   @derive {Jason.Encoder, only: [:status, :type]}
   defstruct [:db, :port, :status, :type]
 
-  # Constants
+  #############
+  # Constants #
+  #############
+
+  # Network
   @host "localhost"
 
   # DB
@@ -21,7 +25,9 @@ defmodule Birds.Bird do
   @type_duck :duck
   @type_goose :goose
 
-  # Client methods
+  ##################
+  # Client methods #
+  ##################
 
   @spec start_link(db: Birds.DB.Database.t(), port: integer()) ::
           :ignore | {:error, any()} | {:ok, pid()}
@@ -41,7 +47,9 @@ defmodule Birds.Bird do
   def kill(port) when is_integer(port), do: get_state(port_atom(port))
   def kill(port) when is_atom(port), do: GenServer.stop(port)
 
-  # GenServer implementation
+  ############################
+  # GenServer implementation #
+  ############################
 
   @impl true
   def init({db, port}) do
@@ -56,7 +64,9 @@ defmodule Birds.Bird do
   @impl true
   def handle_call(:get_state, _from, state), do: {:reply, state, state}
 
-  # Private helpers
+  ###################
+  # Private helpers #
+  ###################
 
   @spec port_atom(port :: integer()) :: atom()
   defp port_atom(port) do
