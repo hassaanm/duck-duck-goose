@@ -11,7 +11,7 @@ defmodule Birds.Application do
   def start(_type, _args) do
     children = [
       {Bandit, plug: Birds.Router, scheme: :http, port: @port},
-      {Birds.Bird, db: Birds.DB.BirdTracker, port: @port, name: Birds.Bird}
+      {Birds.Bird, db: Birds.DB.BirdTracker, port: @port}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

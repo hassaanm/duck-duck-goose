@@ -23,22 +23,23 @@ defmodule Birds.Bird do
 
   # Client methods
 
-  @spec start_link(db: Birds.DB.Database.t(), port: integer(), name: atom()) ::
+  @spec start_link(db: Birds.DB.Database.t(), port: integer()) ::
           :ignore | {:error, any()} | {:ok, pid()}
-  def start_link(db: db, port: port, name: name) do
-    GenServer.start_link(__MODULE__, {db, port}, name: name)
+  def start_link(db: db, port: port) do
+    GenServer.start_link(__MODULE__, {db, port}, name: port_atom(port))
   end
 
-  @spec get_state(name :: atom()) :: %{status: status(), type: type()}
-  def get_state(name) do
-    internal_state = GenServer.call(name, :get_state)
+  @spec get_state(port :: atom() | integer()) :: %{status: status(), type: type()}
+  def get_state(port) when is_integer(port), do: get_state(port_atom(port))
+
+  def get_state(port) when is_atom(port) do
+    internal_state = GenServer.call(port, :get_state)
     %{status: internal_state.status, type: internal_state.type}
   end
 
-  @spec kill(name :: atom()) :: :ok
-  def kill(name) do
-    GenServer.stop(name)
-  end
+  @spec kill(port :: atom() | integer()) :: :ok
+  def kill(port) when is_integer(port), do: get_state(port_atom(port))
+  def kill(port) when is_atom(port), do: GenServer.stop(port)
 
   # GenServer implementation
 
@@ -53,7 +54,14 @@ defmodule Birds.Bird do
   end
 
   @impl true
-  def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+  def handle_call(:get_state, _from, state), do: {:reply, state, state}
+
+  # Private helpers
+
+  @spec port_atom(port :: integer()) :: atom()
+  defp port_atom(port) do
+    port
+    |> Integer.to_string()
+    |> String.to_atom()
   end
 end

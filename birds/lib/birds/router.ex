@@ -5,7 +5,8 @@ defmodule Birds.Router do
   plug(:dispatch)
 
   get "/status" do
-    state = Birds.Bird.get_state(Birds.Bird)
+    port = conn.port
+    state = Birds.Bird.get_state(port)
 
     conn
     |> put_resp_content_type("application/json")
@@ -13,7 +14,8 @@ defmodule Birds.Router do
   end
 
   post "/kill" do
-    Birds.Bird.kill(Birds.Bird)
+    port = conn.port
+    Birds.Bird.kill(port)
     System.halt(0)
   end
 
