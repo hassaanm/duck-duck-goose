@@ -9,10 +9,17 @@ defmodule Birds.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      {Bandit, plug: Birds.Router, scheme: :http, port: @port},
-      {Birds.Bird, db: Birds.DB.BirdTracker, port: @port}
-    ]
+    # Don't start normal supervision tree in tests because this type of application
+    # requires multiple instances, so we'll manually start the processes in the tests.
+    children =
+      if Mix.env() == :test do
+        []
+      else
+        [
+          {Bandit, plug: Birds.Router, scheme: :http, port: @port},
+          {Birds.Bird, db: Birds.DB.BirdTracker, port: @port}
+        ]
+      end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

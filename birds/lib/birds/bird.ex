@@ -8,12 +8,16 @@ defmodule Birds.Bird do
   # Constants #
   #############
 
+  # Functionality
+  @halt Application.compile_env(:birds, :halt)
+  @halt_delay_ms 10
+  @take_leadership_frequency_ms Application.compile_env(:birds, :take_leadership_frequency_ms)
+
   # Network
   @host "localhost"
-  @halt Application.compile_env(:birds, :halt)
 
   # DB
-  @ttl 10
+  @ttl_s 10
   @goose_key "goose"
 
   # Statuses
@@ -56,11 +60,11 @@ defmodule Birds.Bird do
 
   @impl true
   def init({db, port}) do
-    url = "#{@host}:#{port}"
-    become_goose = db.put_new(@goose_key, url, @ttl)
-    type = if become_goose == :ok, do: @type_goose, else: @type_duck
+    # Kick of periodic attempt to steal leadership
+    Process.send(self(), :try_to_take_leadership, [])
 
-    state = %Birds.Bird{db: db, port: port, status: @status_online, type: type}
+    # Create and return state
+    state = %Birds.Bird{db: db, port: port, status: @status_online, type: @type_duck}
     {:ok, state}
   end
 
@@ -71,7 +75,7 @@ defmodule Birds.Bird do
   def handle_call(:shutdown, _from, state) do
     # If halting, then halt after a short delay
     if @halt do
-      Process.send_after(self(), :halt, 10)
+      Process.send_after(self(), :halt, @halt_delay_ms)
     end
 
     {:reply, :ok, %Birds.Bird{state | status: @status_offline}}
@@ -79,6 +83,25 @@ defmodule Birds.Bird do
 
   @impl true
   def handle_info(:halt, _state), do: System.halt(0)
+
+  @impl true
+  def handle_info(:try_to_take_leadership, state) do
+    # If bird is online, try to take leadership if duck / maintain leadership if goose
+    type =
+      if state.status == @status_online do
+        url = "#{@host}:#{state.port}"
+        become_goose = state.db.put_new(@goose_key, url, @ttl_s)
+        if become_goose == :ok, do: @type_goose, else: state.type
+      else
+        state.type
+      end
+
+    # Repeat after a delay
+    Process.send_after(self(), :try_to_take_leadership, @take_leadership_frequency_ms)
+
+    # Update type in state
+    {:noreply, %Birds.Bird{state | type: type}}
+  end
 
   ###################
   # Private helpers #

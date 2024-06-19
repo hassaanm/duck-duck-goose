@@ -23,10 +23,12 @@ defmodule Birds.DB.TestDB do
   @impl Birds.DB.Database
   @spec get(String.t()) :: any()
   def get(key) do
+    time = curr_time()
+
     Agent.get(__MODULE__, fn state ->
       case Map.get(state, key) do
         {value, expires_at} ->
-          if :os.system_time(:seconds) < expires_at do
+          if time < expires_at do
             value
           end
 
@@ -46,7 +48,9 @@ defmodule Birds.DB.TestDB do
   @impl Birds.DB.Database
   @spec put_new(String.t(), any(), integer()) :: :ok | :error
   def put_new(key, value, ttl) do
-    if get(key) == nil do
+    curr_value = get(key)
+
+    if curr_value == nil or curr_value == value do
       expires_at = curr_time() + ttl
       Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
     else

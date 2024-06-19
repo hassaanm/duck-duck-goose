@@ -9,6 +9,9 @@ defmodule BirdsTest do
   # Aliases
   alias Birds.DB.TestDB, as: TestDB
 
+  # Bird behavior
+  @take_leadership_frequency_ms Application.compile_env(:birds, :take_leadership_frequency_ms)
+
   # Network
   @host "localhost"
   @port_counter :port_counter
@@ -160,7 +163,13 @@ defmodule BirdsTest do
       # Shutdown goose
       shutdown_bird(goose_port)
 
-      # Ensure a new goose is selected
+      # Advance time to expire leadership ttl and wait a bit to ensure ducks attempt to take leadership
+      # TODO: Avoid relying on sleep and instead pass in mocked time like TestDB
+      # It's currently ok since @take_leadership_frequency_ms is very short for tests
+      TestDB.advance_time(30)
+      :timer.sleep(@take_leadership_frequency_ms * 2)
+
+      # Ensure one of the previous ducks is now the goose
       {200, duck_1_status} = get_bird_status(duck_1_port)
       {200, duck_2_status} = get_bird_status(duck_2_port)
 
