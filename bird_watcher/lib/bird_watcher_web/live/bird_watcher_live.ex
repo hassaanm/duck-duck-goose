@@ -20,10 +20,10 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
   @spec render(assigns :: any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <button phx-click="add_bird" class="text-lg p-4 m-4 rounded-lg bg-amber-200 hover:bg-amber-400">
+    <button phx-click="add_bird" class="text-lg p-4 m-4 rounded-lg bg-amber-200 hover:bg-amber-400 active:bg-amber-500">
       Add bird
     </button>
-    <button phx-click="shutdown_all" class="text-lg p-4 m-4 rounded-lg bg-rose-300 hover:bg-rose-500">
+    <button phx-click="shutdown_all" class="text-lg p-4 m-4 rounded-lg bg-rose-300 hover:bg-rose-500 active:bg-rose-700">
       Shutdown all birds
     </button>
     <div class="flex flex-row flex-wrap justify-evenly content-evenly gap-4">
@@ -45,21 +45,21 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
             <button
               phx-click="shutdown"
               phx-value-url={bird_url}
-              class="p-2 rounded-lg bg-rose-300 hover:bg-rose-500"
+              class="p-2 rounded-lg bg-rose-300 hover:bg-rose-500 active:bg-rose-700"
             >
               Shutdown
             </button>
             <button
               phx-click="terminate_network"
               phx-value-url={bird_url}
-              class="p-2 rounded-lg bg-sky-300 hover:bg-sky-500"
+              class="p-2 rounded-lg bg-sky-300 hover:bg-sky-500 active:bg-sky-700"
             >
               Terminate network
             </button>
             <button
               phx-click="fix_network"
               phx-value-url={bird_url}
-              class="p-2 rounded-lg bg-emerald-300 hover:bg-emerald-500"
+              class="p-2 rounded-lg bg-emerald-300 hover:bg-emerald-500 active:bg-emerald-700"
             >
               Fix network
             </button>
