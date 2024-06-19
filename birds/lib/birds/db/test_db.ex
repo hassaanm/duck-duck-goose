@@ -3,12 +3,12 @@ defmodule Birds.DB.TestDB do
 
   use Agent
 
-  @spec start(integer()) :: {:error, any()} | {:ok, pid()}
+  @spec start(start_time :: integer()) :: {:error, any()} | {:ok, pid()}
   def start(start_time) do
     Agent.start(fn -> %{time: start_time} end, name: __MODULE__)
   end
 
-  @spec advance_time(integer()) :: :ok
+  @spec advance_time(seconds :: integer()) :: :ok
   def advance_time(seconds) do
     Agent.update(__MODULE__, fn state -> Map.update!(state, :time, &(&1 + seconds)) end)
     :ok
@@ -21,7 +21,7 @@ defmodule Birds.DB.TestDB do
   end
 
   @impl Birds.DB.Database
-  @spec get(String.t()) :: any()
+  @spec get(key :: String.t()) :: any()
   def get(key) do
     time = curr_time()
 
@@ -39,14 +39,14 @@ defmodule Birds.DB.TestDB do
   end
 
   @impl Birds.DB.Database
-  @spec put(String.t(), any(), integer()) :: :ok
+  @spec put(key :: String.t(), value :: any(), ttl :: integer()) :: :ok
   def put(key, value, ttl) do
     expires_at = curr_time() + ttl
     Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
   end
 
   @impl Birds.DB.Database
-  @spec put_new(String.t(), any(), integer()) :: :ok | :error
+  @spec put_new(key :: String.t(), value :: any(), ttl :: integer()) :: :ok | :error
   def put_new(key, value, ttl) do
     curr_value = get(key)
 

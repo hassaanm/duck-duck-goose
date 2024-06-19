@@ -7,20 +7,19 @@ defmodule BirdWatcherWeb.DBController do
   end
 
   def put(conn, %{"key" => key, "value" => value, "ttl" => ttl}) do
-    ttl_s = ttl |> String.to_integer()
-    BirdWatcher.DB.put(key, value, ttl_s)
+    BirdWatcher.DB.put(key, value, ttl)
     json(conn, "success")
   end
 
   def put_new(conn, %{"key" => key, "value" => value, "ttl" => ttl}) do
-    ttl_s = ttl |> String.to_integer()
-
-    case BirdWatcher.DB.put_new(key, value, ttl_s) do
+    case BirdWatcher.DB.put_new(key, value, ttl) do
       :ok ->
         json(conn, "success")
 
       :error ->
-        json(conn, "failure")
+        conn
+        |> put_status(:bad_request)
+        |> json("failure")
     end
   end
 end

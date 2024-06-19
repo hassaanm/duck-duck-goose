@@ -10,7 +10,7 @@ defmodule BirdWatcher.DB do
     Agent.start(fn -> %{} end, name: __MODULE__)
   end
 
-  @spec get(String.t()) :: any()
+  @spec get(key :: String.t()) :: any()
   def get(key) do
     curr_time = curr_time()
 
@@ -27,13 +27,13 @@ defmodule BirdWatcher.DB do
     end)
   end
 
-  @spec put(String.t(), any(), integer()) :: :ok
+  @spec put(key :: String.t(), value :: any(), ttl :: integer()) :: :ok
   def put(key, value, ttl) do
     expires_at = curr_time() + ttl
     Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
   end
 
-  @spec put_new(String.t(), any(), integer()) :: :ok | :error
+  @spec put_new(key :: String.t(), value :: any(), ttl :: integer()) :: :ok | :error
   def put_new(key, value, ttl) do
     curr_value = get(key)
 

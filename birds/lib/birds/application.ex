@@ -5,10 +5,10 @@ defmodule Birds.Application do
 
   use Application
 
-  @port Application.compile_env(:birds, :port)
-
   @impl true
   def start(_type, _args) do
+    port = Application.get_env(:birds, :port)
+
     # Don't start normal supervision tree in tests because this type of application
     # requires multiple instances, so we'll manually start the processes in the tests.
     children =
@@ -16,8 +16,8 @@ defmodule Birds.Application do
         []
       else
         [
-          {Bandit, plug: Birds.Router, scheme: :http, port: @port},
-          {Birds.Bird, db: Birds.DB.BirdTracker, port: @port}
+          {Bandit, plug: Birds.Router, scheme: :http, port: port},
+          {Birds.Bird, db: Birds.DB.BirdTracker, port: port}
         ]
       end
 
