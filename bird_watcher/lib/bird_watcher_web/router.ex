@@ -17,7 +17,7 @@ defmodule BirdWatcherWeb.Router do
   scope "/", BirdWatcherWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", BirdWatcherLive
   end
 
   scope "/api", BirdWatcherWeb do

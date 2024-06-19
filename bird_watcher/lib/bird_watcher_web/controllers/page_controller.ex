@@ -1,9 +1,7 @@
 defmodule BirdWatcherWeb.PageController do
   use BirdWatcherWeb, :controller
 
-  def home(conn, _params) do
-    # The home page is often custom made,
-    # so skip the default app layout.
-    render(conn, :home, layout: false)
+  def bird_watcher(conn, _params) do
+    render(conn, :bird_watcher, layout: false)
   end
 end

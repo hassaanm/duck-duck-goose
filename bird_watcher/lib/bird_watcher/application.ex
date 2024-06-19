@@ -20,7 +20,8 @@ defmodule BirdWatcher.Application do
       # {BirdWatcher.Worker, arg},
       # Start to serve requests, typically the last entry
       BirdWatcherWeb.Endpoint,
-      BirdWatcher.DB
+      BirdWatcher.DB,
+      BirdWatcher.Watcher
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

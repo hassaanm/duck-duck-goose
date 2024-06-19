@@ -10,6 +10,11 @@ defmodule BirdWatcher.DB do
     Agent.start(fn -> %{} end, name: __MODULE__)
   end
 
+  @spec get_all() :: map()
+  def get_all() do
+    Agent.get(__MODULE__, fn state -> state end)
+  end
+
   @spec get(key :: String.t()) :: any()
   def get(key) do
     curr_time = curr_time()
