@@ -1,7 +1,7 @@
 # duck-duck-goose
 
 ## Walkthrough
-https://github.com/hassaanm/duck-duck-goose/assets/914616/9545826b-7863-4b89-9ae9-37929b02f17f
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/d4Fao7std-s/0.jpg)](https://www.youtube.com/watch?v=d4Fao7std-s)
 
 ## How to run applications
 
