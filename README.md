@@ -2,15 +2,15 @@
 
 A duck duck goose game simulation used to represent the node leader election process. The entire code base is written in Elixir. Some files to highlight:
 
-* Dockerfile: Docker configuration to easily get the applications up and running
-* /birds/lib/birds/router.ex: Endpoints for the bird node server
-* /birds/lib/birds/bird.ex: Bird node GenServer
-* /birds/lib/db/: Folder with the DB behavior (interface), DB wrapper, and test DB
-* /birds/test/birds_test.exs: Main end-to-end test file for the bird nodes
-* /bird_watcher/lib/bird_watcher_web/router.ex: API endpoints for the simple db
-* /bird_watcher/lib/bird_watcher_web/live/bird_watcher_live.ex: Live view component for the web app
-* /bird_watcher/lib/bird_watcher/db.ex: Simple DB functionality, essentially a document store
-* /bird_watcher/lib/bird_watcher/watcher.ex: GenServer that continuously polls the bird nodes to get their updated statuses for the web app
+* [`Dockerfile`](Dockerfile): Docker configuration to easily get the applications up and running
+* [`/birds/lib/birds/router.ex`](/birds/lib/birds/router.ex): Endpoints for the bird node server
+* [`/birds/lib/birds/bird.ex`](/birds/lib/birds/bird.ex): Bird node GenServer
+* [`/birds/lib/db/`](/birds/lib/db/): Folder with the DB behavior (interface), DB wrapper, and test DB
+* [`/birds/test/birds_test.exs`](/birds/test/birds_test.exs): Main end-to-end test file for the bird nodes
+* [`/bird_watcher/lib/bird_watcher_web/router.ex`](/bird_watcher/lib/bird_watcher_web/router.ex): API endpoints for the simple db
+* [`/bird_watcher/lib/bird_watcher_web/live/bird_watcher_live.ex`](/bird_watcher/lib/bird_watcher_web/live/bird_watcher_live.ex): Live view component for the web app
+* [`/bird_watcher/lib/bird_watcher/db.ex`](/bird_watcher/lib/bird_watcher/db.ex): Simple DB functionality, essentially a document store
+* [`/bird_watcher/lib/bird_watcher/watcher.ex`](/bird_watcher/lib/bird_watcher/watcher.ex): GenServer that continuously polls the bird nodes to get their updated statuses for the web app
 
 ## Video walkthrough
 
