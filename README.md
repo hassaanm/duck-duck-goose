@@ -15,6 +15,7 @@ A duck duck goose game simulation used to represent the node leader election pro
 ## Video walkthrough
 
 Click below to watch the video walkthrough on youtube. For some reason, my screen recorder didn't pick up the mouse properly, so some parts seem confusing. However, it should be enough to get the overall picture.
+
 [![IMAGE ALT TEXT HERE](youtube-thumbnail.png)](https://www.youtube.com/watch?v=d4Fao7std-s)
 
 ## How to run the servers
