@@ -1,9 +1,7 @@
 # duck-duck-goose
 
 ## Walkthrough
-<video width="640" height="480" controls>
-    <source src="Walkthrough.webm" type="video/webm">
-</video>
+https://github.com/hassaanm/duck-duck-goose/assets/914616/9545826b-7863-4b89-9ae9-37929b02f17f
 
 ## How to run applications
 
