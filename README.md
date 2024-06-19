@@ -1,17 +1,20 @@
 # duck-duck-goose
 
+## Walkthrough
+<video width="640" height="480" controls>
+    <source src="Walkthrough.webm" type="video/webm">
+</video>
+
 ## How to run applications
 
 ### Docker (easiest)
 1. Install docker on your machine.
 2. Navigate to the main folder: `cd duck-duck-goose`. You should see a Dockerfile.
 3. Build the docker image: `docker build -t duck-duck-goose .`.
-4. Run the docker image: `docker run --network="host" duck-duck-goose`.
+4. Run the docker image: `docker run --network="host" --name=ducky duck-duck-goose`.
 Note: that we're just running the dev version of the applications locally, so exposing all network ports is fine.
 5. Open the phoenix application on a browser to easily view bird nodes: `localhost:4000`.
-6. Navigate to the birds application: `cd birds`.
-7. Fetch dependencies and compile: `mix do deps.get, deps.compile, compile`.
-8. Create bird nodes either by clicking the "Add bird" button or manually: `PORT=4001 mix run --no-halt`.
+8. Create bird nodes either by clicking the "Add bird" button or manually: `docker exec -it ducky sh -c "cd /app/birds && PORT=4001 mix run --no-halt"`.
 Note: that you'll have to manually manage the ports to avoid reusing them.
 
 ### Manually
