@@ -2,6 +2,7 @@
 
 A duck duck goose game simulation used to represent the node leader election process. The entire code base is written in Elixir. Some files to highlight:
 
+* Dockerfile: Docker configuration to easily get the applications up and running
 * /birds/lib/birds/router.ex: Endpoints for the bird node server
 * /birds/lib/birds/bird.ex: Bird node GenServer
 * /birds/lib/db/: Folder with the DB behavior (interface), DB wrapper, and test DB
