@@ -1,3 +1,5 @@
 import Config
 
-config :birds, port: 9009
+config :birds,
+  port: 9009,
+  halt: false

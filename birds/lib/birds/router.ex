@@ -1,6 +1,7 @@
 defmodule Birds.Router do
   use Plug.Router
 
+  plug(Birds.EnsureBirdIsOnline)
   plug(:match)
   plug(:dispatch)
 
@@ -13,10 +14,13 @@ defmodule Birds.Router do
     |> send_resp(200, Jason.encode!(state))
   end
 
-  post "/kill" do
+  post "/shutdown" do
     port = conn.port
-    Birds.Bird.kill(port)
-    System.halt(0)
+    Birds.Bird.shutdown(port)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, "success")
   end
 
   post "/terminate_network" do
