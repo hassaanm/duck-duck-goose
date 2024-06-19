@@ -1,6 +1,7 @@
 # duck-duck-goose
 
 ## Walkthrough
+Click below to watch the video walkthrough on youtube. For some reason, my screen recorder didn't pick up the mouse properly, so some parts seem confusing. However, it should be enough to get the overall picture.
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/d4Fao7std-s/0.jpg)](https://www.youtube.com/watch?v=d4Fao7std-s)
 
 ## How to run applications
