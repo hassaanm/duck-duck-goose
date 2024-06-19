@@ -64,7 +64,7 @@ or update the ttl of their leadership. If the leader shutsdown or gets a network
 
 The bird node server has the following four endpoints:
 
-* GET /status: returns the status of the node
-* POST /shutdown: shuts down the node and halts the server
-* POST /terminate_network: simulates a network partition
-* POST /fix_network: fixes the simulated network partition
+* GET `/status`: returns the status of the node
+* POST `/shutdown`: shuts down the node and halts the server
+* POST `/terminate_network`: simulates a network partition
+* POST `/fix_network`: fixes the simulated network partition
