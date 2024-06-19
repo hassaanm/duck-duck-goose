@@ -67,6 +67,9 @@ defmodule Birds.Bird do
 
   @impl true
   def init({db, port}) do
+    # Register self in DB
+    db.put(port, url(port), nil)
+
     # Kick of periodic attempt to steal leadership
     Process.send(self(), :try_to_take_leadership, [])
 
@@ -104,8 +107,7 @@ defmodule Birds.Bird do
   @impl true
   def handle_info(:try_to_take_leadership, state) do
     # Try to take leadership if duck / maintain leadership if goose
-    url = "#{@host}:#{state.port}"
-    become_goose = db_put_new(state, @goose_key, url, @ttl_s)
+    become_goose = db_put_new(state, @goose_key, url(state.port), @ttl_s)
     type = if become_goose == :ok, do: @type_goose, else: @type_duck
 
     # Repeat after a delay
@@ -125,6 +127,9 @@ defmodule Birds.Bird do
     |> Integer.to_string()
     |> String.to_atom()
   end
+
+  @spec url(port :: integer()) :: String.t()
+  defp url(port), do: "#{@host}:#{port}"
 
   @spec db_put_new(
           state :: %Birds.Bird{},

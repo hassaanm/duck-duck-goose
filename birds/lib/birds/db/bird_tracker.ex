@@ -13,7 +13,7 @@ defmodule Birds.DB.BirdTracker do
   end
 
   @impl Birds.DB.Database
-  @spec put(key :: String.t(), value :: any(), ttl :: integer()) :: :ok
+  @spec put(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok
   def put(key, value, ttl) do
     url = "#{@base_url}/put"
     body = Jason.encode!(%{key: key, value: value, ttl: ttl})
@@ -22,7 +22,7 @@ defmodule Birds.DB.BirdTracker do
   end
 
   @impl Birds.DB.Database
-  @spec put_new(key :: String.t(), value :: any(), ttl :: integer()) :: :ok | :error
+  @spec put_new(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok | :error
   def put_new(key, value, ttl) do
     url = "#{@base_url}/put_new"
     body = Jason.encode!(%{key: key, value: value, ttl: ttl})

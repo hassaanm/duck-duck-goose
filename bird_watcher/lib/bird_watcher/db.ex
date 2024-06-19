@@ -16,6 +16,9 @@ defmodule BirdWatcher.DB do
 
     Agent.get(__MODULE__, fn state ->
       case Map.get(state, key) do
+        {value, nil} ->
+          value
+
         {value, expires_at} ->
           if curr_time < expires_at do
             value
@@ -27,18 +30,18 @@ defmodule BirdWatcher.DB do
     end)
   end
 
-  @spec put(key :: String.t(), value :: any(), ttl :: integer()) :: :ok
+  @spec put(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok
   def put(key, value, ttl) do
-    expires_at = curr_time() + ttl
+    expires_at = ttl && curr_time() + ttl
     Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
   end
 
-  @spec put_new(key :: String.t(), value :: any(), ttl :: integer()) :: :ok | :error
+  @spec put_new(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok | :error
   def put_new(key, value, ttl) do
     curr_value = get(key)
 
     if curr_value == nil or curr_value == value do
-      expires_at = curr_time() + ttl
+      expires_at = ttl && curr_time() + ttl
       Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
     else
       :error
