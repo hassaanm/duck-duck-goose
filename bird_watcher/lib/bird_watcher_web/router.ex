@@ -20,10 +20,15 @@ defmodule BirdWatcherWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", BirdWatcherWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", BirdWatcherWeb do
+    pipe_through :api
+
+    scope "/db" do
+      get "/get", DBController, :get
+      post "/put", DBController, :put
+      post "/put_new", DBController, :put_new
+    end
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:bird_watcher, :dev_routes) do

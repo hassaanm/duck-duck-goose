@@ -19,7 +19,8 @@ defmodule BirdWatcher.Application do
       # Start a worker by calling: BirdWatcher.Worker.start_link(arg)
       # {BirdWatcher.Worker, arg},
       # Start to serve requests, typically the last entry
-      BirdWatcherWeb.Endpoint
+      BirdWatcherWeb.Endpoint,
+      BirdWatcher.DB
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
