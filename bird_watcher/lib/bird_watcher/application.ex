@@ -7,9 +7,6 @@ defmodule BirdWatcher.Application do
 
   @impl true
   def start(_type, _args) do
-    # How to kick off an elixir server in the background
-    # Task.start(fn -> System.cmd("sh", ["-c", "mix run --no-halt &"], env: [{"PORT", "4001"}]) end)
-
     children = [
       BirdWatcherWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:bird_watcher, :dns_cluster_query) || :ignore},

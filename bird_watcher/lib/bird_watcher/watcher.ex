@@ -45,7 +45,7 @@ defmodule BirdWatcher.Watcher do
     bird_urls =
       BirdWatcher.DB.get_all()
       |> Map.values()
-      |> Stream.map(fn {value, _ttl} -> value end)
+      |> Stream.map(fn {value, _ttl} -> "#{value}" end)
       |> Stream.filter(fn value -> String.match?(value, ~r/localhost:\d+/) end)
       |> Enum.to_list()
 

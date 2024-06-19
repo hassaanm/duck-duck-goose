@@ -36,13 +36,13 @@ defmodule BirdWatcher.DB do
   end
 
   @spec put(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok
-  def put(key, value, ttl) do
+  def put(key, value, ttl \\ nil) do
     expires_at = ttl && curr_time() + ttl
     Agent.update(__MODULE__, fn state -> Map.put(state, key, {value, expires_at}) end)
   end
 
   @spec put_new(key :: String.t(), value :: any(), ttl :: integer() | nil) :: :ok | :error
-  def put_new(key, value, ttl) do
+  def put_new(key, value, ttl \\ nil) do
     curr_value = get(key)
 
     if curr_value == nil or curr_value == value do

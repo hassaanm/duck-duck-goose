@@ -2,6 +2,8 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
   use BirdWatcherWeb, :live_view
 
   @title "👀 Bird Watcher"
+  @port_key "port"
+  @starting_port 5000
 
   @spec mount(_params :: any(), _session :: any(), socked :: map()) :: {:ok, map()}
   def mount(_params, _session, socket) do
@@ -18,6 +20,9 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
   @spec render(assigns :: any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
+    <button phx-click="add_bird" class="text-lg p-4 m-4 rounded-xl bg-amber-200">
+      Add bird
+    </button>
     <div class="flex flex-row flex-wrap justify-evenly content-evenly gap-4">
       <%= for {bird_url, %{"status" => bird_status, "type" => bird_type}} <- @statuses do %>
         <div class="p-8 border-2 rounded-lg flex flex-col items-center gap-4">
@@ -61,6 +66,23 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
   #############
   # Callbacks #
   #############
+
+  @spec handle_event(String.t(), map(), map()) :: {:noreply, map()}
+  def handle_event("add_bird", _value, socket) do
+    # Find a free port
+    port = BirdWatcher.DB.get(@port_key) || @starting_port
+    BirdWatcher.DB.put(@port_key, port + 1)
+
+    # Kick off a bird node in the background
+    Task.start(fn ->
+      System.cmd("sh", ["-c", "mix run --no-halt &"],
+        env: [{"PORT", "#{port}"}],
+        cd: Path.expand("../birds")
+      )
+    end)
+
+    {:noreply, socket}
+  end
 
   @spec handle_event(String.t(), map(), map()) :: {:noreply, map()}
   def handle_event("shutdown", %{"url" => bird_url}, socket) do
