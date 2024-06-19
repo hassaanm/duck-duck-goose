@@ -17,7 +17,7 @@ defmodule Birds.Bird do
   @host "localhost"
 
   # DB
-  @ttl_s 10
+  @ttl_s 5
   @goose_key "goose"
 
   # Statuses
@@ -50,9 +50,16 @@ defmodule Birds.Bird do
   end
 
   @spec shutdown(port :: atom() | integer()) :: :ok
-  def shutdown(port)
   def shutdown(port) when is_integer(port), do: shutdown(port_atom(port))
   def shutdown(port) when is_atom(port), do: GenServer.call(port, :shutdown)
+
+  @spec fix_network(port :: atom() | integer()) :: :ok
+  def fix_network(port) when is_integer(port), do: fix_network(port_atom(port))
+  def fix_network(port) when is_atom(port), do: GenServer.call(port, :fix_network)
+
+  @spec terminate_network(port :: atom() | integer()) :: :ok
+  def terminate_network(port) when is_integer(port), do: terminate_network(port_atom(port))
+  def terminate_network(port) when is_atom(port), do: GenServer.call(port, :terminate_network)
 
   ############################
   # GenServer implementation #
@@ -82,19 +89,24 @@ defmodule Birds.Bird do
   end
 
   @impl true
+  def handle_call(:fix_network, _from, state) do
+    {:reply, :ok, %Birds.Bird{state | status: @status_online}}
+  end
+
+  @impl true
+  def handle_call(:terminate_network, _from, state) do
+    {:reply, :ok, %Birds.Bird{state | status: @status_network_partitioned}}
+  end
+
+  @impl true
   def handle_info(:halt, _state), do: System.halt(0)
 
   @impl true
   def handle_info(:try_to_take_leadership, state) do
-    # If bird is online, try to take leadership if duck / maintain leadership if goose
-    type =
-      if state.status == @status_online do
-        url = "#{@host}:#{state.port}"
-        become_goose = state.db.put_new(@goose_key, url, @ttl_s)
-        if become_goose == :ok, do: @type_goose, else: state.type
-      else
-        state.type
-      end
+    # Try to take leadership if duck / maintain leadership if goose
+    url = "#{@host}:#{state.port}"
+    become_goose = db_put_new(state, @goose_key, url, @ttl_s)
+    type = if become_goose == :ok, do: @type_goose, else: @type_duck
 
     # Repeat after a delay
     Process.send_after(self(), :try_to_take_leadership, @take_leadership_frequency_ms)
@@ -112,5 +124,20 @@ defmodule Birds.Bird do
     port
     |> Integer.to_string()
     |> String.to_atom()
+  end
+
+  @spec db_put_new(
+          state :: %Birds.Bird{},
+          key :: String.t(),
+          value :: String.t(),
+          ttl :: integer()
+        ) :: :ok | :error
+  defp db_put_new(state, key, value, ttl) do
+    # Wrap calls to the DB to simulate network failure behavior
+    if state.status == @status_online do
+      state.db.put_new(key, value, ttl)
+    else
+      :error
+    end
   end
 end

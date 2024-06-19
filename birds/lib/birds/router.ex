@@ -23,12 +23,22 @@ defmodule Birds.Router do
     |> send_resp(200, "success")
   end
 
-  post "/terminate_network" do
-    {:ok, body, conn} = Plug.Conn.read_body(conn)
+  post "/fix_network" do
+    port = conn.port
+    Birds.Bird.fix_network(port)
 
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, ~s({"message": "POST /that endpoint", "body": #{body}}))
+    |> send_resp(200, "success")
+  end
+
+  post "/terminate_network" do
+    port = conn.port
+    Birds.Bird.terminate_network(port)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, "success")
   end
 
   match _ do

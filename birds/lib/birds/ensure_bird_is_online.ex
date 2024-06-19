@@ -1,13 +1,16 @@
 defmodule Birds.EnsureBirdIsOnline do
   import Plug.Conn
 
+  @allowed_paths ["/fix_network"]
+
   def init(opts), do: opts
 
   def call(conn, _opts) do
     port = conn.port |> Integer.to_string() |> String.to_atom()
-    bird_state = Birds.Bird.get_state(port)
+    is_bird_online = Birds.Bird.get_state(port).status == :online
+    is_path_allowed = Enum.any?(@allowed_paths, fn path -> path == conn.request_path end)
 
-    if bird_state.status == :online do
+    if is_bird_online or is_path_allowed do
       conn
     else
       conn

@@ -1,5 +1,5 @@
 defmodule BirdsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   doctest Birds.Bird
 
   #############
@@ -17,9 +17,10 @@ defmodule BirdsTest do
   @port_counter :port_counter
 
   # Types
-  @type path :: :status | :shutdown | :terminate_network
+  @type path :: :status | :shutdown | :fix_network | :terminate_network
   @path_status :status
   @path_shutdown :shutdown
+  @path_fix_network :fix_network
   @path_terminate_network :terminate_network
 
   ###########
@@ -32,13 +33,12 @@ defmodule BirdsTest do
   @spec get_next_port() :: integer()
   defp get_next_port(), do: Agent.get_and_update(@port_counter, fn port -> {port, port + 1} end)
 
-  @spec start_bird() :: {integer(), [pid()]}
+  @spec start_bird() :: integer()
   defp start_bird() do
     port = get_next_port()
-    {:ok, bandit_pid} = Bandit.start_link(%{plug: Birds.Router, scheme: :http, port: port})
-    {:ok, bird_pid} = Birds.Bird.start_link(db: TestDB, port: port)
-
-    {port, [bandit_pid, bird_pid]}
+    Bandit.start_link(%{plug: Birds.Router, scheme: :http, port: port})
+    Birds.Bird.start_link(db: TestDB, port: port)
+    port
   end
 
   @spec url(port :: integer(), path :: path()) :: String.t()
@@ -56,9 +56,33 @@ defmodule BirdsTest do
     end
   end
 
+  @spec shutdown_bird(port :: integer()) :: any()
   defp shutdown_bird(port) do
     shutdown_url = url(port, @path_shutdown)
-    resp = HTTPoison.post!(shutdown_url, "{}")
+    HTTPoison.post!(shutdown_url, "{}")
+  end
+
+  @spec terminate_network_bird(port :: integer()) :: any()
+  defp terminate_network_bird(port) do
+    terminate_network_url = url(port, @path_terminate_network)
+    HTTPoison.post!(terminate_network_url, "{}")
+  end
+
+  @spec fix_network_bird(port :: integer()) :: any()
+  defp fix_network_bird(port) do
+    fix_network_url = url(port, @path_fix_network)
+    HTTPoison.post!(fix_network_url, "{}")
+  end
+
+  @spec advance_db_time_and_sleep(db_advance_time :: integer(), sleep_time :: integer()) :: :ok
+  defp advance_db_time_and_sleep(db_advance_time, sleep_time \\ @take_leadership_frequency_ms * 2) do
+    TestDB.advance_time(db_advance_time)
+
+    # TODO: Avoid relying on sleep and instead pass in mocked time like TestDB
+    # It's currently ok since @take_leadership_frequency_ms is very short for tests
+    :timer.sleep(sleep_time)
+
+    :ok
   end
 
   #########
@@ -87,7 +111,7 @@ defmodule BirdsTest do
   #########
 
   test "first duck to join becomes the goose" do
-    {port, pids} = start_bird()
+    port = start_bird()
 
     {200, bird_status} = get_bird_status(port)
     assert Map.get(bird_status, "type") == "goose"
@@ -96,9 +120,9 @@ defmodule BirdsTest do
 
   test "ducks that join after there is a goose remain ducks" do
     # Start bird nodes
-    {goose_port, goose_pids} = start_bird()
-    {duck_1_port, duck_1_pids} = start_bird()
-    {duck_2_port, duck_2_pids} = start_bird()
+    goose_port = start_bird()
+    duck_1_port = start_bird()
+    duck_2_port = start_bird()
 
     # Get bird statuses
     {200, goose_status} = get_bird_status(goose_port)
@@ -115,16 +139,12 @@ defmodule BirdsTest do
     assert Map.get(duck_2_status, "status") == "online"
   end
 
-  test "all birds have a list of the ducks and the goose" do
-    # Not required, so I'll probably cut
-  end
-
   describe "when the goose goes offline" do
     test "the goose is unavailable" do
       # Start bird nodes
-      {goose_port, goose_pids} = start_bird()
-      {duck_1_port, duck_1_pids} = start_bird()
-      {duck_2_port, duck_2_pids} = start_bird()
+      goose_port = start_bird()
+      duck_1_port = start_bird()
+      duck_2_port = start_bird()
 
       # Get bird statuses
       {200, goose_status} = get_bird_status(goose_port)
@@ -146,9 +166,9 @@ defmodule BirdsTest do
 
     test "another duck becomes the goose" do
       # Start bird nodes
-      {goose_port, goose_pids} = start_bird()
-      {duck_1_port, duck_1_pids} = start_bird()
-      {duck_2_port, duck_2_pids} = start_bird()
+      goose_port = start_bird()
+      duck_1_port = start_bird()
+      duck_2_port = start_bird()
 
       # Get bird statuses
       {200, goose_status} = get_bird_status(goose_port)
@@ -164,10 +184,7 @@ defmodule BirdsTest do
       shutdown_bird(goose_port)
 
       # Advance time to expire leadership ttl and wait a bit to ensure ducks attempt to take leadership
-      # TODO: Avoid relying on sleep and instead pass in mocked time like TestDB
-      # It's currently ok since @take_leadership_frequency_ms is very short for tests
-      TestDB.advance_time(30)
-      :timer.sleep(@take_leadership_frequency_ms * 2)
+      advance_db_time_and_sleep(20)
 
       # Ensure one of the previous ducks is now the goose
       {200, duck_1_status} = get_bird_status(duck_1_port)
@@ -180,19 +197,87 @@ defmodule BirdsTest do
 
   describe "when the goose gets a network partition" do
     test "the goose becomes a duck" do
+      # Start bird nodes
+      goose_port = start_bird()
+      duck_1_port = start_bird()
+      duck_2_port = start_bird()
+
+      # Get bird statuses
+      {200, goose_status} = get_bird_status(goose_port)
+      {200, duck_1_status} = get_bird_status(duck_1_port)
+      {200, duck_2_status} = get_bird_status(duck_2_port)
+
+      # Assert type of bird nodes
+      assert Map.get(goose_status, "type") == "goose"
+      assert Map.get(duck_1_status, "type") == "duck"
+      assert Map.get(duck_2_status, "type") == "duck"
+
+      # Terminate network for goose
+      terminate_network_bird(goose_port)
+
+      # Ensure goose is offline
+      {resp_code, _goose_status} = get_bird_status(goose_port)
+      assert resp_code == 404
     end
 
     test "another duck becomes the goose" do
-    end
-  end
+      # Start bird nodes
+      goose_port = start_bird()
+      duck_1_port = start_bird()
+      duck_2_port = start_bird()
 
-  describe "when a duck goes offline" do
-    test "it is removed from the duck list" do
-    end
-  end
+      # Get bird statuses
+      {200, goose_status} = get_bird_status(goose_port)
+      {200, duck_1_status} = get_bird_status(duck_1_port)
+      {200, duck_2_status} = get_bird_status(duck_2_port)
 
-  describe "when a duck gets a network partition" do
-    test "it is removed from the duck list" do
+      # Assert type of bird nodes
+      assert Map.get(goose_status, "type") == "goose"
+      assert Map.get(duck_1_status, "type") == "duck"
+      assert Map.get(duck_2_status, "type") == "duck"
+
+      # Terminate network for goose
+      terminate_network_bird(goose_port)
+
+      # Advance time to expire leadership ttl and wait a bit to ensure ducks attempt to take leadership
+      advance_db_time_and_sleep(20)
+
+      # Ensure one of the previous ducks is now the goose
+      {200, duck_1_status} = get_bird_status(duck_1_port)
+      {200, duck_2_status} = get_bird_status(duck_2_port)
+
+      assert Map.get(duck_1_status, "type") == "goose" or
+               Map.get(duck_2_status, "type") == "goose"
+    end
+
+    test "the goose becomes and remains a duck even after network is fixed" do
+      # Start bird nodes
+      goose_port = start_bird()
+      duck_1_port = start_bird()
+      duck_2_port = start_bird()
+
+      # Get bird statuses
+      {200, goose_status} = get_bird_status(goose_port)
+      {200, duck_1_status} = get_bird_status(duck_1_port)
+      {200, duck_2_status} = get_bird_status(duck_2_port)
+
+      # Assert type of bird nodes
+      assert Map.get(goose_status, "type") == "goose"
+      assert Map.get(duck_1_status, "type") == "duck"
+      assert Map.get(duck_2_status, "type") == "duck"
+
+      # Terminate network for goose
+      terminate_network_bird(goose_port)
+
+      # Advance time to expire leadership ttl and wait a bit to ensure ducks attempt to take leadership
+      advance_db_time_and_sleep(20)
+
+      # Fix network for old goose
+      fix_network_bird(goose_port)
+
+      # Ensure previous goose is now a duck
+      {200, goose_status} = get_bird_status(goose_port)
+      assert Map.get(goose_status, "type") == "duck"
     end
   end
 end
