@@ -13,12 +13,11 @@ defmodule BirdWatcher.Application do
       {Phoenix.PubSub, name: BirdWatcher.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: BirdWatcher.Finch},
-      # Start a worker by calling: BirdWatcher.Worker.start_link(arg)
-      # {BirdWatcher.Worker, arg},
-      # Start to serve requests, typically the last entry
-      BirdWatcherWeb.Endpoint,
+      {Task.Supervisor, name: BirdWatcher.TaskSupervisor, restart: :transiant},
       BirdWatcher.DB,
-      BirdWatcher.Watcher
+      BirdWatcher.Watcher,
+      # Start to serve requests, typically the last entry
+      BirdWatcherWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

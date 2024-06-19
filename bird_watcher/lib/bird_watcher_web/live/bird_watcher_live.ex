@@ -20,13 +20,16 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
   @spec render(assigns :: any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <button phx-click="add_bird" class="text-lg p-4 m-4 rounded-xl bg-amber-200">
+    <button phx-click="add_bird" class="text-lg p-4 m-4 rounded-lg bg-amber-200 hover:bg-amber-400">
       Add bird
+    </button>
+    <button phx-click="shutdown_all" class="text-lg p-4 m-4 rounded-lg bg-rose-300 hover:bg-rose-500">
+      Shutdown all birds
     </button>
     <div class="flex flex-row flex-wrap justify-evenly content-evenly gap-4">
       <%= for {bird_url, %{"status" => bird_status, "type" => bird_type}} <- @statuses do %>
-        <div class="p-8 border-2 rounded-lg flex flex-col items-center gap-4">
-          <img class="rounded-full size-24" src={bird_image_path(bird_type) |> IO.inspect()} />
+        <div class="flex flex-col items-center gap-4 p-8 border-2 rounded-lg border-slate-400">
+          <img class="rounded-full size-24" src={bird_image_path(bird_type)} />
           <div>
             <div>
               <b>URL:</b> <%= bird_url %>
@@ -39,20 +42,24 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
             </div>
           </div>
           <div class="text-sm flex flex-col gap-2">
-            <button phx-click="shutdown" phx-value-url={bird_url} class="p-2 rounded-xl bg-rose-300">
+            <button
+              phx-click="shutdown"
+              phx-value-url={bird_url}
+              class="p-2 rounded-lg bg-rose-300 hover:bg-rose-500"
+            >
               Shutdown
             </button>
             <button
               phx-click="terminate_network"
               phx-value-url={bird_url}
-              class="p-2 rounded-xl bg-sky-300"
+              class="p-2 rounded-lg bg-sky-300 hover:bg-sky-500"
             >
               Terminate network
             </button>
             <button
               phx-click="fix_network"
               phx-value-url={bird_url}
-              class="p-2 rounded-xl bg-emerald-300"
+              class="p-2 rounded-lg bg-emerald-300 hover:bg-emerald-500"
             >
               Fix network
             </button>
@@ -74,12 +81,27 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
     BirdWatcher.DB.put(@port_key, port + 1)
 
     # Kick off a bird node in the background
-    Task.start(fn ->
-      System.cmd("sh", ["-c", "mix run --no-halt &"],
-        env: [{"PORT", "#{port}"}],
-        cd: Path.expand("../birds")
-      )
-    end)
+    Task.Supervisor.async(
+      BirdWatcher.TaskSupervisor,
+      fn ->
+        System.cmd("sh", ["-c", "mix run --no-halt"],
+          env: [{"PORT", "#{port}"}, {"LOGGER_LEVEL", "error"}],
+          cd: Path.expand("../birds")
+        )
+      end,
+      shutdown: :brutal_kill
+    )
+
+    {:noreply, socket}
+  end
+
+  @spec handle_event(String.t(), map(), map()) :: {:noreply, map()}
+  def handle_event("shutdown_all", _value, socket) do
+    # Shutdown all birds
+    # This functionality exists, so we don't leave zombie processes behind
+    # Ideally, they would've been cleaned up gracefully, but it was taking too long to figure out.
+    socket.assigns[:statuses]
+    |> Enum.each(fn {bird_url, _status} -> HTTPoison.post("#{bird_url}/shutdown", "") end)
 
     {:noreply, socket}
   end
@@ -102,9 +124,19 @@ defmodule BirdWatcherWeb.BirdWatcherLive do
     {:noreply, socket}
   end
 
-  @spec handle_info({:update, any()}, any()) :: {:noreply, any()}
+  @spec handle_info({:update, any()}, map()) :: {:noreply, any()}
   def handle_info({:update, statuses}, socket) do
     {:noreply, assign(socket, statuses: statuses)}
+  end
+
+  @spec handle_info({reference(), {any(), integer()}}, map()) :: {:noreply, any()}
+  def handle_info({ref, {_info, 0}}, socket) when is_reference(ref) do
+    {:noreply, socket}
+  end
+
+  @spec handle_info({:DOWN, reference(), :process, pid(), atom()}, map()) :: {:noreply, any()}
+  def handle_info({:DOWN, ref, :process, _pid, _reason}, socket) when is_reference(ref) do
+    {:noreply, socket}
   end
 
   ###################

@@ -7,7 +7,7 @@ defmodule BirdWatcher.Watcher do
   # Constants #
   #############
 
-  @polling_frequency 1000
+  @polling_frequency 500
 
   ##################
   # Client methods #
@@ -41,26 +41,8 @@ defmodule BirdWatcher.Watcher do
 
   @impl true
   def handle_info(:poll_status, _state) do
-    # Fetch bird urls
-    bird_urls =
-      BirdWatcher.DB.get_all()
-      |> Map.values()
-      |> Stream.map(fn {value, _ttl} -> "#{value}" end)
-      |> Stream.filter(fn value -> String.match?(value, ~r/localhost:\d+/) end)
-      |> Enum.to_list()
-
-    # Fetch status for each bird
-    bird_statuses =
-      bird_urls
-      |> Map.new(fn bird_url ->
-        case HTTPoison.get("#{bird_url}/status") do
-          {:ok, resp = %HTTPoison.Response{status_code: 200}} ->
-            {bird_url, Jason.decode!(resp.body)}
-
-          _ ->
-            {bird_url, %{"status" => "unavailable", "type" => "unknown"}}
-        end
-      end)
+    # Fetch bird statuses
+    bird_statuses = fetch_bird_statuses()
 
     # Broadcast updated statuses
     broadcast_statuses(bird_statuses)
@@ -84,5 +66,28 @@ defmodule BirdWatcher.Watcher do
   @spec broadcast_statuses(statuses :: map()) :: any()
   defp broadcast_statuses(statuses) do
     Phoenix.PubSub.broadcast(BirdWatcher.PubSub, "status_updates", {:update, statuses})
+  end
+
+  @spec fetch_bird_statuses() :: map()
+  defp fetch_bird_statuses() do
+    # Fetch bird urls
+    bird_urls =
+      BirdWatcher.DB.get_all()
+      |> Map.values()
+      |> Stream.map(fn {value, _ttl} -> "#{value}" end)
+      |> Stream.filter(fn value -> String.match?(value, ~r/localhost:\d+/) end)
+      |> Enum.to_list()
+
+    # Fetch status for each bird
+    bird_urls
+    |> Map.new(fn bird_url ->
+      case HTTPoison.get("#{bird_url}/status") do
+        {:ok, resp = %HTTPoison.Response{status_code: 200}} ->
+          {bird_url, Jason.decode!(resp.body)}
+
+        _ ->
+          {bird_url, %{"status" => "unavailable", "type" => "unknown"}}
+      end
+    end)
   end
 end
