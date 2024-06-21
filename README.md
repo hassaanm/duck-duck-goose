@@ -12,6 +12,9 @@ A duck duck goose game simulation used to represent the node leader election pro
 * [`/bird_watcher/lib/bird_watcher/db.ex`](/bird_watcher/lib/bird_watcher/db.ex): Simple DB functionality, essentially a document store
 * [`/bird_watcher/lib/bird_watcher/watcher.ex`](/bird_watcher/lib/bird_watcher/watcher.ex): GenServer that continuously polls the bird nodes to get their updated statuses for the web app
 
+The project has a web frontend to easily view the state of nodes and interact with them. The app simply starts the bird node servers and hits the http endpoints on the servers.
+![youtube-thumbnail](https://github.com/hassaanm/duck-duck-goose/assets/914616/89b0cb6a-a62b-4121-a382-b827bf3ba193)
+
 ## Video walkthrough
 
 Click below to watch the video walkthrough on youtube. For some reason, my screen recorder didn't pick up the mouse properly, so some parts seem confusing. However, it should be enough to get the overall picture.
